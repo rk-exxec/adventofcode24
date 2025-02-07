@@ -41,16 +41,20 @@ while line != "":
     line = lines.pop(0).strip()
 
 solution = 0
-for update in lines:
-    update = np.asarray([int(x) for x in update.split(",")])
-    printable = True
+i=0
+printable = np.ones(len(lines), dtype=bool)
+
+updates = np.array([[int(x) for x in line.strip().split(",")] for line in lines], dtype=object)
+for update in updates:
+    update = np.asarray(update)
     for rule in rules:
         if rule[0] in update and rule[1] in update:
             if np.argwhere(update == rule[0]) >= np.argwhere(update == rule[1]):
-                printable = False
+                printable[i] = False
                 break
-    if printable:
-        solution += update[update.size//2]
+    i+=1 
+
+solution = np.sum([u[len(u)//2] for u in updates[printable]])
 print(solution)
 
 
@@ -69,19 +73,15 @@ for num in np.unique(np.asarray(rules).ravel()):
             else:
                 cur_order.appendleft(rule[0])
     order.append(cur_order)
-    dict_order[num] = np.argwhere(cur_order==num)[0]
+    if num not in dict_order:
+        # this doesnt work as the numbers are alwys in the center!
+        dict_order[num] = np.argwhere(cur_order==num).squeeze()[0]#
+    else: 
+        print("Error: Non unique index")
 
 
 solution = 0
-for update in lines:
-    update = np.asarray([int(x) for x in update.split(",")])
-    printable = True
-    for rule in rules:
-        if rule[0] in update and rule[1] in update:
-            if np.argwhere(update == rule[0]) >= np.argwhere(update == rule[1]):
-                printable = False
-                break
-    if not printable:
-        sorted_update = sorted(update, key=lambda x: dict_order[x])
-        solution += sorted_update[update.size//2]
+for update in updates[~ printable]:
+    sorted_update = sorted(update, key=lambda x: dict_order[x])
+    solution += sorted_update[len(sorted_update)//2]
 print(solution)
